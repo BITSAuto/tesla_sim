@@ -1,0 +1,72 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /PointCloud2
+      Splitter Ratio: 0.5
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Cell Size: 5
+      Plane Cell Count: 40
+      Color: 160; 160; 164
+    - Class: rviz_default_plugins/PointCloud2
+      Name: PointCloud2
+      Enabled: true
+      Topic:
+        Value: /vehicle/points
+        Depth: 5
+        # depth_image_proc publishes this cloud best-effort. RViz defaults new
+        # displays to Reliable, which silently refuses to connect to a
+        # best-effort publisher (mismatched QoS is a hard incompatibility, not
+        # just a warning) -- the cloud would show as subscribed with zero data.
+        Reliability Policy: Best Effort
+        History Policy: Keep Last
+      Color Transformer: RGB8
+      Size (Pixels): 3
+      Style: Points
+      Decay Time: 0
+    - Class: rviz_default_plugins/Image
+      Name: Camera
+      Enabled: true
+      Topic:
+        Value: /vehicle/camera/image_color
+        Depth: 5
+        Reliability Policy: Reliable
+        History Policy: Keep Last
+    - Class: rviz_default_plugins/Image
+      Name: Depth
+      Enabled: true
+      Topic:
+        Value: /vehicle/range_finder/image
+        Depth: 5
+        Reliability Policy: Reliable
+        History Policy: Keep Last
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: range_finder
+    Frame Rate: 30
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 30
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 10
+      Pitch: 0.3
+      Yaw: 4.7
+      Name: Current View
+    Saved: ~
+Window Geometry:
+  Height: 900
+  Width: 1400
+  Displays:
+    collapsed: false

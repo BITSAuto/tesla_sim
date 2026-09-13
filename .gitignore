@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+
+# Webots per-user viewport/panel-layout state, not simulation content.
+*.wbproj

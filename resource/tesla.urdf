@@ -1,0 +1,63 @@
+<?xml version="1.0" ?>
+<robot name="tesla">
+    <webots>
+        <!-- alwaysOn keeps both sensors streaming even with no subscriber, so
+             the depth and colour images stay time-aligned for the point cloud. -->
+        <device reference="camera" type="Camera">
+            <ros>
+                <alwaysOn>true</alwaysOn>
+                <!-- Same optical-frame split as range_finder below, needed now
+                     that the camera and depth sensor have different FOVs (69
+                     vs 87 deg, matching real D435 specs) -- depth_image_proc
+                     needs a real TF between the two optical frames to register
+                     them, rather than being able to assume they're identical. -->
+                <frameName>camera_optical</frameName>
+            </ros>
+        </device>
+        <device reference="range_finder" type="RangeFinder">
+            <ros>
+                <alwaysOn>true</alwaysOn>
+                <!-- Depth data comes out in standard camera-optical convention
+                     (X right, Y down, Z forward/depth), not the body-frame
+                     convention (X forward, Y left, Z up) RViz's grid assumes
+                     for a plain frame with no TF. Naming it "_optical" and
+                     correcting with a static transform in the launch file
+                     (range_finder -> range_finder_optical) is the standard ROS
+                     pattern for this; every camera/depth driver does the same
+                     two-frame split. -->
+                <frameName>range_finder_optical</frameName>
+            </ros>
+        </device>
+        <!-- D435i's IMU is a raw 6-DoF sensor (accelerometer + gyroscope
+             only) -- unlike an InertialUnit, real hardware does not give
+             absolute orientation directly, so inertialUnitName is
+             deliberately omitted for fidelity to the actual sensor. That
+             leaves sensor_msgs/Imu's orientation field permanently frozen at
+             its unset-message default, (0,0,0,1) -- a *valid* identity
+             quaternion, just one that never updates and silently reads as
+             "no rotation" forever regardless of the vehicle's actual
+             orientation. Anything consuming this topic for fusion (e.g.
+             imu_filter_madgwick, robot_localization) should ignore that
+             field entirely -- most such tools expect
+             orientation_covariance[0] == -1 as the signal to do so, which
+             this message does not set, so a relay node may be needed to add
+             that if a downstream tool insists on checking it rather than
+             just being told to ignore the field. -->
+        <plugin type="webots_ros2_driver::Ros2IMU">
+            <gyroName>gyro</gyroName>
+            <accelerometerName>accelerometer</accelerometerName>
+            <alwaysOn>true</alwaysOn>
+            <!-- Ros2SensorPlugin defaults topicName/frameName to the "name"
+                 URDF attribute, which is only auto-populated for <device>
+                 tags tied to a real Webots device -- a bare <plugin> tag like
+                 this one apparently leaves it empty, producing an invalid
+                 "~/" topic name and crashing the driver on startup. Setting
+                 both explicitly sidesteps that. -->
+            <topicName>~/imu</topicName>
+            <frameName>imu</frameName>
+        </plugin>
+        <plugin type="tesla_sim.tesla_driver.TeslaDriver">
+            <cmdTimeout>0.0</cmdTimeout>
+        </plugin>
+    </webots>
+</robot>

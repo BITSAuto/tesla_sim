@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>tesla_sim</name>
+  <version>0.1.0</version>
+  <description>Webots Tesla simulation with an RGB + depth camera, driven over ROS 2 topics.</description>
+  <maintainer email="neelnaik2005@gmail.com">neel</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>ackermann_msgs</exec_depend>
+  <exec_depend>depth_image_proc</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>vehicle_bridge</exec_depend>
+  <exec_depend>webots_ros2_driver</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
