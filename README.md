@@ -49,6 +49,45 @@ Launch arguments: `world` (default `tesla_city.wbt`), `pointcloud` (default
 true), `colored` (default true), `autonomous` (default false, runs the upstream
 lane follower), `rviz` (default false).
 
+### On a plain Ubuntu 24.04 machine (no distrobox)
+
+`scripts/run_tesla_sim.sh` in this repo also covers a native setup: ROS 2
+Jazzy, no container, and Webots **built from source** in `$HOME/webots` (the
+arrangement used on the Jetson, where no arm64 snap of Webots exists). It
+detects `WEBOTS_HOME`, the ROS distro and the Qt plugin path rather than
+hardcoding them, so the same script serves both setups.
+
+One-time setup:
+
+```bash
+sudo apt install ros-jazzy-webots-ros2 ros-jazzy-ackermann-msgs \
+                 ros-jazzy-depth-image-proc ros-jazzy-rviz2
+
+mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
+git clone https://github.com/BITSAuto/tesla_sim.git
+git clone https://github.com/BITSAuto/vehicle_bridge.git   # required: tesla_driver imports relay_steering
+
+cd ~/ros2_ws && colcon build --packages-select vehicle_bridge tesla_sim
+```
+
+Then run it:
+
+```bash
+~/ros2_ws/src/tesla_sim/scripts/run_tesla_sim.sh
+~/ros2_ws/src/tesla_sim/scripts/run_tesla_sim.sh autonomous:=true rviz:=true
+```
+
+`vehicle_bridge` is not optional — `tesla_driver.py` imports
+`RelaySteeringController` from it, so the launch fails at driver start without
+it in the same workspace. Set `TESLA_SIM_WS` if the workspace is not
+`~/ros2_ws`.
+
+A Webots source build that was linked against the distro's Qt6 (rather than
+the Qt bundle the official build ships) needs `QT_PLUGIN_PATH` pointing at the
+system Qt plugins; the script sets this automatically when it sees no
+`lib/webots/qt` in the Webots tree, deriving the multiarch directory so it
+works on both x86_64 and arm64.
+
 ## Driving it
 
 | Topic | Type | Meaning |
@@ -77,6 +116,11 @@ immediately -- this is intentional, not lag. `/steering/angle` and
 that control code written for the real vehicle can run against tesla_sim with
 zero changes -- see `vehicle_bridge`'s README for the full protocol this
 mirrors and what's calibrated against real hardware versus still unverified.
+
+On the real vehicle, `/steering/angle` comes from `vehicle_bridge`'s
+`encoder_node`, which reads the steering encoder's own microcontroller over
+USB serial. Run either that or tesla_sim on a given ROS domain, not both,
+because they publish the same topic.
 
 ```bash
 ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 8.0}, angular: {z: 0.1}}"
