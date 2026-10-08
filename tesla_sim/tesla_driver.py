@@ -32,6 +32,13 @@ response looks the same against either backend. See
 private-notes/tesla_sim/02-decision-log.md D-11 and 07-decision-tree.md for
 why this replaced the earlier instant/continuous steering implementation.
 
+Speed behaves like the real cart (tesla_sim/longitudinal.py): a commanded
+speed is a throttle setting reached with a lag; a lower speed or 0 releases
+throttle and the car coasts down at ``coastDecel``; it never brakes in normal
+driving. Braking is only /vehicle/emergency_brake, which stops instantly --
+as the cart's brake does. Steering is limited to the cart's +/-15 deg
+(``maxSteeringDeg``). Both are set as plugin properties in resource/tesla.urdf.
+
 Interfaces:
   /cmd_vel        geometry_msgs/Twist            linear.x in m/s, angular.z is
                                                  the steering angle in rad
@@ -40,6 +47,8 @@ Interfaces:
                                                  upstream lane follower and the
                                                  Jetson stack work unchanged),
                                                  steering_angle in rad
+  /vehicle/emergency_brake  std_msgs/Bool        True: brake (instant stop, held);
+                                                 False: release
   /vehicle/speed  std_msgs/Float32               measured speed in m/s, from the
                                                  rear wheel position sensors
   /bitsauto/speed std_msgs/Float32               same measurement, in km/h, under
@@ -61,8 +70,10 @@ import time
 import rclpy
 from ackermann_msgs.msg import AckermannDrive
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Float32
+from std_msgs.msg import Bool, Float32
 from vehicle_bridge.relay_steering import RATE_DEG_S, RELAY_LEFT, RELAY_RIGHT, RelaySteeringController
+
+from tesla_sim.longitudinal import LongitudinalModel
 
 KMH_TO_MS = 1 / 3.6
 
@@ -70,8 +81,9 @@ KMH_TO_MS = 1 / 3.6
 WHEEL_RADIUS = 0.36   # m, TeslaModel3Wheel tireRadius
 WHEELBASE = 2.94      # m
 TRACK = 1.72          # m
-MAX_STEERING_ANGLE = 0.5  # rad
-MAX_STEERING_DEG = math.degrees(MAX_STEERING_ANGLE)
+# The cart's steering lock (cart_controller MAX_STEER_DEG); the Tesla PROTO
+# itself allows ~28.6 deg, which the cart can't do.
+DEFAULT_MAX_STEERING_DEG = 15.0
 
 
 class TeslaDriver:
@@ -115,9 +127,18 @@ class TeslaDriver:
         self.__steering_relay = RelaySteeringController()
         self.__target_steer_deg = 0.0
         self.__rack_angle_deg = 0.0
+        self.__max_steer_deg = float(properties.get('maxSteeringDeg', DEFAULT_MAX_STEERING_DEG))
 
-        # Optional dead-man: if no command arrives for this many seconds the car
-        # coasts to a stop. 0.0 (default) disables it, which is what the
+        # Cart-like speed behaviour: throttle with lag, coast-only slowing,
+        # and a separate instant emergency brake (see longitudinal.py).
+        self.__longitudinal = LongitudinalModel(
+            drive_time_constant=float(properties.get('driveTimeConstant', 1.0)),
+            coast_decel=float(properties.get('coastDecel', 0.4)))
+        self.__target_speed_ms = 0.0
+        self.__emergency_brake = False
+
+        # Optional dead-man: if no command arrives for this many seconds the
+        # throttle is released and the car coasts to a stop. 0.0 (default) disables it, which is what the
         # autonomous lane follower wants; teleop is nicer with ~1.0.
         self.__cmd_timeout = float(properties.get('cmdTimeout', 0.0))
         self.__last_cmd_time = None
@@ -126,6 +147,9 @@ class TeslaDriver:
         self.__node = rclpy.create_node('tesla_driver')
         self.__node.create_subscription(Twist, 'cmd_vel', self.__on_cmd_vel, 1)
         self.__node.create_subscription(AckermannDrive, 'cmd_ackermann', self.__on_cmd_ackermann, 1)
+        # Emergency brake: True stops the car instantly and holds it, False
+        # releases. The only way to brake -- speed 0 on cmd_* means coast.
+        self.__node.create_subscription(Bool, 'vehicle/emergency_brake', self.__on_emergency_brake, 1)
         self.__speed_publisher = self.__node.create_publisher(Float32, 'vehicle/speed', 1)
         # Absolute (leading-slash) topic names: these two intentionally match
         # the real vehicle's global topic names exactly (road_segmentation's
@@ -137,15 +161,24 @@ class TeslaDriver:
 
         self.__node.get_logger().info(
             'Tesla driver ready: /cmd_vel (m/s) and /cmd_ackermann (km/h), '
-            f'cmd_timeout={self.__cmd_timeout}s')
+            f'cmd_timeout={self.__cmd_timeout}s, steering limit +/-{self.__max_steer_deg:.1f} deg, '
+            f'coast decel {self.__longitudinal.coast_decel} m/s^2, '
+            'brake only via /vehicle/emergency_brake')
 
     def __apply(self, speed_ms, steering_angle):
-        for wheel in self.__wheels:
-            wheel.setVelocity(speed_ms / WHEEL_RADIUS)
-
-        steering_angle = max(-MAX_STEERING_ANGLE, min(MAX_STEERING_ANGLE, steering_angle))
+        self.__target_speed_ms = speed_ms
+        limit = math.radians(self.__max_steer_deg)
+        steering_angle = max(-limit, min(limit, steering_angle))
         self.__target_steer_deg = math.degrees(steering_angle)
         self.__last_cmd_time = self.__node.get_clock().now()
+
+    def __on_emergency_brake(self, message):
+        # (rclpy forbids one log call site switching severity, hence two calls.)
+        if message.data and not self.__emergency_brake:
+            self.__node.get_logger().warn('EMERGENCY BRAKE ENGAGED')
+        elif not message.data and self.__emergency_brake:
+            self.__node.get_logger().info('Emergency brake released')
+        self.__emergency_brake = message.data
 
     def __on_cmd_vel(self, message):
         self.__apply(message.linear.x, message.angular.z)
@@ -163,9 +196,9 @@ class TeslaDriver:
         relay = self.__steering_relay.update(
             self.__target_steer_deg, self.__rack_angle_deg, time.monotonic())
         if relay == RELAY_RIGHT:
-            self.__rack_angle_deg = min(MAX_STEERING_DEG, self.__rack_angle_deg + RATE_DEG_S * dt)
+            self.__rack_angle_deg = min(self.__max_steer_deg, self.__rack_angle_deg + RATE_DEG_S * dt)
         elif relay == RELAY_LEFT:
-            self.__rack_angle_deg = max(-MAX_STEERING_DEG, self.__rack_angle_deg - RATE_DEG_S * dt)
+            self.__rack_angle_deg = max(-self.__max_steer_deg, self.__rack_angle_deg - RATE_DEG_S * dt)
         # else RELAY_STOP: __rack_angle_deg unchanged.
 
         rack_rad = math.radians(self.__rack_angle_deg)
@@ -192,8 +225,18 @@ class TeslaDriver:
 
     def step(self):
         rclpy.spin_once(self.__node, timeout_sec=0)
+        dt = self.__timestep / 1000.0
 
-        self.__update_steering(self.__timestep / 1000.0)
+        self.__update_steering(dt)
+
+        target = self.__target_speed_ms
+        if self.__cmd_timeout > 0.0 and self.__last_cmd_time is not None:
+            age = (self.__node.get_clock().now() - self.__last_cmd_time).nanoseconds / 1e9
+            if age > self.__cmd_timeout:
+                target = 0.0      # throttle released: coast, don't brake
+        speed = self.__longitudinal.update(target, dt, brake=self.__emergency_brake)
+        for wheel in self.__wheels:
+            wheel.setVelocity(speed / WHEEL_RADIUS)
 
         measured_speed_ms = self.__measured_speed()
         self.__speed_publisher.publish(Float32(data=float(measured_speed_ms)))
@@ -202,9 +245,3 @@ class TeslaDriver:
         sensor_rad = self.__steer_sensor.getValue()
         if not math.isnan(sensor_rad):
             self.__steer_angle_publisher.publish(Float32(data=float(math.degrees(sensor_rad))))
-
-        if self.__cmd_timeout > 0.0 and self.__last_cmd_time is not None:
-            age = (self.__node.get_clock().now() - self.__last_cmd_time).nanoseconds / 1e9
-            if age > self.__cmd_timeout:
-                for wheel in self.__wheels:
-                    wheel.setVelocity(0.0)

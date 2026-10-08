@@ -97,10 +97,29 @@ works on both x86_64 and arm64.
 | `/vehicle/speed` | `std_msgs/Float32` | measured speed in m/s, from the rear wheel encoders |
 | `/bitsauto/speed` | `std_msgs/Float32` | same measurement, in km/h, under the real vehicle's own global topic name |
 | `/steering/angle` | `std_msgs/Float32` | measured steering angle in degrees (+right/-left), under the real vehicle's own global topic name |
+| `/vehicle/emergency_brake` | `std_msgs/Bool` | `True` = emergency brake (instant stop, held), `False` = release. The **only** way to brake |
 
 `/cmd_ackermann` is in km/h rather than m/s to stay compatible with the upstream
 lane follower and with the Jetson's `stereo_driving` stack. Steering is clamped
-to ±0.5 rad. Negative speeds reverse.
+to the cart's ±15° (`maxSteeringDeg`). Negative speeds reverse.
+
+**Speed behaves like the cart, which never brakes in normal driving.** The
+real cart's brake can't modulate: it stops the vehicle instantly and can damage
+it, so it is for emergencies only (`/vehicle/emergency_brake`). The driver
+therefore treats a commanded speed as a throttle setting
+(`tesla_sim/longitudinal.py`):
+
+- A speed above the current one is reached with a first-order lag
+  (`driveTimeConstant`, 1 s).
+- A lower speed, or 0, releases throttle. The car then **coasts** down at
+  `coastDecel` (0.4 m/s², a placeholder until measured on the cart: about
+  2.4 m to roll to a stop from 5 km/h), never faster.
+- The `cmdTimeout` dead-man coasts too.
+
+All three are plugin properties in `resource/tesla.urdf`. They were checked
+in sim time: lag τ 1.00 s, coast 0.40 m/s² and 2.41 m, and the emergency
+brake stops the car from 5 km/h in about 0.25 s (the wheels lock instantly;
+the body skids briefly).
 
 **Steering is not instant.** The real vehicle has no proportional steering
 input -- only a three-state relay (left/stop/right) that runs continuously
@@ -145,6 +164,11 @@ than on a timer -- Webots holds the last commanded wheel velocity, so a single
 keypress produces sustained motion; there's no need to hold a key down.
 
 ## Sensing
+
+The sensors are mounted like the real cart's, measured from the 2026-10-01
+campus bag: **1.52 m above the road, centred, pitched ~9° down**. Camera,
+depth, accelerometer and gyro share that pose, as on a D435i. With that tilt,
+the bonnet hides the road out to about 2.7 m.
 
 The camera and depth sensor are calibrated to **Intel RealSense D435i** specs
 (the real vehicle's actual hardware), not made-up numbers. The D435i's
