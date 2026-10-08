@@ -173,10 +173,11 @@ class TeslaDriver:
         self.__last_cmd_time = self.__node.get_clock().now()
 
     def __on_emergency_brake(self, message):
-        if message.data != self.__emergency_brake:
-            log = self.__node.get_logger()
-            (log.warn if message.data else log.info)(
-                'EMERGENCY BRAKE ' + ('ENGAGED' if message.data else 'released'))
+        # (rclpy forbids one log call site switching severity, hence two calls.)
+        if message.data and not self.__emergency_brake:
+            self.__node.get_logger().warn('EMERGENCY BRAKE ENGAGED')
+        elif not message.data and self.__emergency_brake:
+            self.__node.get_logger().info('Emergency brake released')
         self.__emergency_brake = message.data
 
     def __on_cmd_vel(self, message):
