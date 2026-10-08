@@ -58,6 +58,13 @@
         </plugin>
         <plugin type="tesla_sim.tesla_driver.TeslaDriver">
             <cmdTimeout>0.0</cmdTimeout>
+            <!-- Real cart: steering lock +/-15 deg (cart_controller
+                 MAX_STEER_DEG). Coasting deceleration (throttle off, no
+                 brake) is a placeholder until measured on the cart: at
+                 5 km/h, 0.4 m/s^2 gives a ~2.4 m roll-out. -->
+            <maxSteeringDeg>15.0</maxSteeringDeg>
+            <coastDecel>0.4</coastDecel>
+            <driveTimeConstant>1.0</driveTimeConstant>
         </plugin>
     </webots>
 </robot>

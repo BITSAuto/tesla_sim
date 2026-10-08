@@ -1439,10 +1439,14 @@ TeslaModel3 {
   controller "<extern>"
   sensorsSlotFront [
     Camera {
+      # Mount matches the real cart, measured from the 2026-10-01 campus bag:
+      # camera 1.52 m above the road, centred, pitched ~9 deg down (0.157 rad).
+      # Depth, accelerometer and gyro share the same pose, as on a D435i.
       # Intel RealSense D435 RGB sensor: 69 deg horizontal FOV (1.204 rad),
       # 1280x720 -- see README for the full spec table and the approximations
       # made (co-located with the depth sensor, no lens distortion).
-      translation -2.12 0 0.93
+      translation -2.12 0 1.115
+      rotation 0 1 0 0.157
       name "camera"
       fieldOfView 1.204277
       width 1280
@@ -1461,7 +1465,8 @@ TeslaModel3 {
       # 848x480, range 0.105-10 m (datasheet gives 0.105 m as the Min-Z at this
       # resolution, and 0.3-3 m as the "ideal" accurate range; 10 m is the
       # commonly cited usable max at reduced accuracy).
-      translation -2.12 0 0.93
+      translation -2.12 0 1.115
+      rotation 0 1 0 0.157
       name "range_finder"
       fieldOfView 1.518436
       width 848
@@ -1477,11 +1482,13 @@ TeslaModel3 {
       # defaults are +/-4g accel and +/-1000 deg/s gyro, but I could not
       # verify current firmware settings against Bosch's or Intel's spec
       # pages from here.
-      translation -2.12 0 0.93
+      translation -2.12 0 1.115
+      rotation 0 1 0 0.157
       name "accelerometer"
     }
     Gyro {
-      translation -2.12 0 0.93
+      translation -2.12 0 1.115
+      rotation 0 1 0 0.157
       name "gyro"
     }
   ]
