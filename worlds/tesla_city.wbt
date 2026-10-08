@@ -844,11 +844,15 @@ BigSassafras {
   name "tree(19)"
 }
 PedestrianCrossing {
-  translation 26 45 -0.06
+  # Lowered from z -0.06: the PROTO's visible slab sat ~0.095 m above the road
+  # while its bounding object is off, so the car drove *through* a raised
+  # platform that the camera saw as a step (a false drop/obstacle). Flush now.
+  translation 26 45 -0.155
   rotation 0 0 1 -1.5707953071795862
 }
 PedestrianCrossing {
-  translation -45.0693 -61.4608 -0.06
+  # Lowered to be flush with the road, as above.
+  translation -45.0693 -61.4608 -0.155
   name "pedestrian crossing(1)"
 }
 CautionSign {
