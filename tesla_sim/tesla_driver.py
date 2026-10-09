@@ -29,8 +29,8 @@ rotary encoder. tesla_sim models the same relay + hysteresis behavior via
 vehicle_bridge.relay_steering.RelaySteeringController (shared with the real
 serial bridge, vehicle_bridge/serial_bridge_node.py) so a controller's step
 response looks the same against either backend. See
-private-notes/tesla_sim/02-decision-log.md D-11 and 07-decision-tree.md for
-why this replaced the earlier instant/continuous steering implementation.
+project-docs/03-decisions/D-010-relay-steering-shared-with-vehicle-bridge.md
+for why this replaced the earlier instant/continuous steering implementation.
 
 Speed behaves like the real cart (tesla_sim/longitudinal.py): a commanded
 speed is a throttle setting reached with a lag; a lower speed or 0 releases

@@ -5,6 +5,10 @@ over ROS 2 topics. Derived from the upstream `webots_ros2_tesla` demo, with the
 depth sensor, a GPS, a working control interface and local launch plumbing
 added.
 
+Design history, decisions, verified facts, open questions, known bugs and
+status are in the [project docs](project-docs/README.md). Read them before
+changing anything, and update them with every change.
+
 ## Running
 
 Everything ROS-side lives in the **ubuntu22 distrobox** (ROS 2 Humble). Webots
