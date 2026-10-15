@@ -30,9 +30,15 @@ def generate_launch_description():
     pointcloud = LaunchConfiguration('pointcloud')
     colored = LaunchConfiguration('colored')
 
+    # TESLA_SIM_STREAM=1 starts Webots' web streaming server (W3D, on the same TCP
+    # port as the controllers, 1234), so the 3D view can be watched in a browser
+    # on another machine instead of through a slow forwarded X display.
+    stream = os.environ.get('TESLA_SIM_STREAM', '').lower() not in ('', '0', 'false', 'no')
+
     webots = WebotsLauncher(
         world=PathJoinSubstitution([package_dir, 'worlds', world]),
         ros2_supervisor=True,
+        stream=stream,
     )
 
     tesla_driver = WebotsController(

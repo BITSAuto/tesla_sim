@@ -67,24 +67,24 @@ One-time setup:
 sudo apt install ros-jazzy-webots-ros2 ros-jazzy-ackermann-msgs \
                  ros-jazzy-depth-image-proc ros-jazzy-rviz2
 
-mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
+mkdir -p ~/BITSAuto_All_repo/ros2_ws/src && cd ~/BITSAuto_All_repo/ros2_ws/src
 git clone https://github.com/BITSAuto/tesla_sim.git
 git clone https://github.com/BITSAuto/vehicle_bridge.git   # required: tesla_driver imports relay_steering
 
-cd ~/ros2_ws && colcon build --packages-select vehicle_bridge tesla_sim
+cd ~/BITSAuto_All_repo/ros2_ws && colcon build --packages-select vehicle_bridge tesla_sim
 ```
 
 Then run it:
 
 ```bash
-~/ros2_ws/src/tesla_sim/scripts/run_tesla_sim.sh
-~/ros2_ws/src/tesla_sim/scripts/run_tesla_sim.sh autonomous:=true rviz:=true
+~/BITSAuto_All_repo/ros2_ws/src/tesla_sim/scripts/run_tesla_sim.sh
+~/BITSAuto_All_repo/ros2_ws/src/tesla_sim/scripts/run_tesla_sim.sh autonomous:=true rviz:=true
 ```
 
 `vehicle_bridge` is not optional — `tesla_driver.py` imports
 `RelaySteeringController` from it, so the launch fails at driver start without
 it in the same workspace. Set `TESLA_SIM_WS` if the workspace is not
-`~/ros2_ws`.
+`~/BITSAuto_All_repo/ros2_ws`.
 
 A Webots source build that was linked against the distro's Qt6 (rather than
 the Qt bundle the official build ships) needs `QT_PLUGIN_PATH` pointing at the
