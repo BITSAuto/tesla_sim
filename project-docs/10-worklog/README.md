@@ -33,6 +33,7 @@ File name: `YYYY-MM-DD-short-slug.md`. Several pages on one day are fine.
 
 | Date | Page |
 | --- | --- |
+| 2026-10-15 | [Orin / Jazzy support](2026-10-15-orin-jazzy-support.md) |
 | 2026-10-09 | [Project docs replace private notes](2026-10-09-project-docs.md) |
 | 2026-10-08 | [Make the sim behave like the cart](2026-10-08-cart-fidelity.md) |
 | 2026-10-06 | [Portable run script](2026-10-06-portable-run-script.md) |

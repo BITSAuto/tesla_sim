@@ -10,6 +10,7 @@ anything DDS-related.
 | [webots-api-and-plugins.md](webots-api-and-plugins.md) | M-01 Driver API no-op · M-02 bare `<plugin>` name · M-03 IMU orientation documented wrongly · M-04 point cloud rendered sideways |
 | [process-cleanup-and-dds.md](process-cleanup-and-dds.md) | M-05 stale stop-script list · M-06 respawn crash storm · M-07 stray diagnostic process · M-08 backwards domain fix · M-09 guessed DDS limit |
 | [diagnosis-pitfalls.md](diagnosis-pitfalls.md) | M-10 one explanation applied to two reports · M-11 black `scrot` screenshot · M-12 anchored `pgrep` |
+| [jazzy-and-orin-bugs.md](jazzy-and-orin-bugs.md) | M-17 colour intrinsics on the depth camera_info (Jazzy) · M-18 the Orin's tesla_sim behind main |
 | [cart-fidelity-bugs.md](cart-fidelity-bugs.md) | M-13 e-brake release crash · M-14 wall-clock timing · M-15 crossings read as a step · M-16 objects sink at the start |
 
 ## Recurring patterns

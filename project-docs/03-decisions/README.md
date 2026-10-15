@@ -29,6 +29,10 @@ don't re-propose without new evidence) · *Superseded by D-NNN*
 | [D-018](D-018-camera-mount-from-campus-bag.md) | 2026-10-08 | Sensor mount from the campus bag | Accepted |
 | [D-019](D-019-lower-pedestrian-crossings.md) | 2026-10-08 | Lower the pedestrian crossings | Accepted |
 | [D-020](D-020-project-docs-replace-private-notes.md) | 2026-10-09 | `project-docs/` replaces private notes | Accepted |
+| [D-021](D-021-raw-relay-steering-input.md) | 2026-10-10 | Raw relay commands on `/steering/command` | Accepted |
+| [D-022](D-022-registered-depth-own-namespace.md) | 2026-10-15 | Registered depth in its own namespace | Accepted |
+| [D-023](D-023-sensors-at-30-hz-and-streaming.md) | 2026-10-10 | Sensors at 30 Hz; optional web streaming | Accepted |
+| [D-024](D-024-road-loop-world.md) | 2026-10-15 | A narrow `road_loop` world | Accepted |
 
 ## How the decisions connect
 

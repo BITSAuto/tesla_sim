@@ -38,7 +38,7 @@ the cart's dimensions and coast rate. Details: [05-status](05-status/README.md).
    [frames and conventions](02-architecture/frames-and-conventions.md) ·
    [vehicle model](02-architecture/vehicle-model.md) ·
    [sensors](02-architecture/sensors.md)
-3. **[Decisions](03-decisions/README.md)** — D-001 to D-020, one page each
+3. **[Decisions](03-decisions/README.md)** — D-001 to D-024, one page each
 4. **[Knowledge](04-knowledge/README.md)** —
    [Webots internals](04-knowledge/webots-internals.md) ·
    [vehicle model facts](04-knowledge/vehicle-model-facts.md) ·
@@ -55,10 +55,12 @@ the cart's dimensions and coast rate. Details: [05-status](05-status/README.md).
    [Webots API and plugins](07-bugs-and-lessons/webots-api-and-plugins.md) ·
    [process cleanup and DDS](07-bugs-and-lessons/process-cleanup-and-dds.md) ·
    [diagnosis pitfalls](07-bugs-and-lessons/diagnosis-pitfalls.md) ·
-   [cart-fidelity bugs](07-bugs-and-lessons/cart-fidelity-bugs.md)
+   [cart-fidelity bugs](07-bugs-and-lessons/cart-fidelity-bugs.md) ·
+   [Jazzy and Orin bugs](07-bugs-and-lessons/jazzy-and-orin-bugs.md)
 8. **[Guides](08-guides/README.md)** —
    [setup and build](08-guides/setup-and-build.md) ·
    [running the sim](08-guides/running-the-sim.md) ·
+   [running on the Orin](08-guides/running-on-the-orin.md) ·
    [driving and teleop](08-guides/driving-and-teleop.md) ·
    [spawning test objects](08-guides/spawning-test-objects.md) ·
    [world assets](08-guides/world-assets.md) ·

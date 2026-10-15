@@ -5,6 +5,7 @@ tested, update the guide in the same PR.
 
 | Guide | For |
 | --- | --- |
+| [running-on-the-orin.md](running-on-the-orin.md) | The Orin: headless, streaming to a laptop, worlds |
 | [setup-and-build.md](setup-and-build.md) | Installing dependencies and building, on the laptop (distrobox) or native Jazzy |
 | [running-the-sim.md](running-the-sim.md) | Starting and stopping the sim, launch arguments, running with perception and the driving stack |
 | [driving-and-teleop.md](driving-and-teleop.md) | Driving by topic or keyboard; emergency brake; checking that it moves |

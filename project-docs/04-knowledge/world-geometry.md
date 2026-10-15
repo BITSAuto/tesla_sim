@@ -37,3 +37,10 @@ oncoming-traffic lane under keep-left rules.
   lowered them.
 - **No holes:** Webots roads can't have holes cut in them, so drops and
   potholes can't be tested.
+
+## road_loop (`worlds/road_loop.wbt`, 2026-10-15)
+**Verified** from the world and road_follower's generator: a rounded square
+of 7 m road with 0.15 m curbs, core half-side 30 m and corner radius 20 m
+(60 m straights), 366 m around. The car spawns at (0, −50) heading +x, on
+the centre of the bottom straight. The road-centre estimator reads its width
+as 6.9 m.

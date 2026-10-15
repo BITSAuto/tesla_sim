@@ -10,8 +10,8 @@ tilt the bonnet hides the road out to about 2.7 m; perception sees roughly
 
 | Sensor | Webots device | Spec | Source of the spec |
 | --- | --- | --- | --- |
-| RGB camera | `Camera` | 69° horizontal FOV, 1280×720 | D435 datasheet (Documented) |
-| Depth | `RangeFinder` | 87° horizontal FOV, 848×480, 0.105–10 m | D435 datasheet (Documented); ground-truth depth, no noise |
+| RGB camera | `Camera` (30 Hz) | 69° horizontal FOV, 1280×720 | D435 datasheet (Documented) |
+| Depth | `RangeFinder` (30 Hz) | 87° horizontal FOV, 848×480, 0.105–10 m | D435 datasheet (Documented); ground-truth depth, no noise |
 | IMU | `Gyro` + `Accelerometer` via `Ros2IMU` | noise-free, unbounded range | D435i has a Bosch BMI055 (Verified); range/noise not modelled |
 | GPS | `GPS` | ground truth, front bumper (3.79 m ahead of the rear axle) | |
 
