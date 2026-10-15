@@ -80,7 +80,8 @@ fi
 # --- workspace overlay -----------------------------------------------------
 # tesla_sim depends on vehicle_bridge (tesla_driver imports relay_steering
 # from it), so both packages must be built into the same workspace.
-WS="${TESLA_SIM_WS:-$HOME/ros2_ws}"
+WS="${TESLA_SIM_WS:-${BITSAUTO_HOME:-$HOME/BITSAuto_All_repo}/ros2_ws}"
+[ -d "$WS" ] || WS="$HOME/ros2_ws"   # laptop/container setups keep it here
 if [ -f "$WS/install/setup.bash" ]; then
   # shellcheck disable=SC1091
   source "$WS/install/setup.bash"

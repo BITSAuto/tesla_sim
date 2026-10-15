@@ -55,6 +55,20 @@ Interfaces:
                                                  the real vehicle's own topic name
                                                  so unmodified real-vehicle control
                                                  code can run against tesla_sim
+  /steering/command std_msgs/UInt8               raw relay command, exactly what
+                                                 the real cart's steering input
+                                                 takes: 0-100, > 50 turns right
+                                                 until commanded otherwise (or
+                                                 the end stop), < 50 turns left,
+                                                 50 stops. While commands keep
+                                                 arriving (< RAW_TIMEOUT_S old) the
+                                                 angle target of /cmd_ackermann is
+                                                 ignored for steering; speed is
+                                                 still taken from /cmd_ackermann.
+                                                 ROS parameter `steer_delay_s`
+                                                 delays every raw command to
+                                                 model actuation latency;
+                                                 `max_steer_deg` is the end stop.
   /steering/angle std_msgs/Float32               measured steering angle in degrees
                                                  (+right/-left, matching the real
                                                  rotary encoder's convention),
@@ -64,14 +78,16 @@ Interfaces:
                                                  this plugin's internal estimate
 """
 
+import collections
 import math
 import time
 
 import rclpy
 from ackermann_msgs.msg import AckermannDrive
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Bool, Float32
-from vehicle_bridge.relay_steering import RATE_DEG_S, RELAY_LEFT, RELAY_RIGHT, RelaySteeringController
+from std_msgs.msg import Bool, Float32, UInt8
+from vehicle_bridge.relay_steering import (RATE_DEG_S, RELAY_LEFT, RELAY_RIGHT, RELAY_STOP,
+                                            RelaySteeringController)
 
 from tesla_sim.longitudinal import LongitudinalModel
 
@@ -84,6 +100,7 @@ TRACK = 1.72          # m
 # The cart's steering lock (cart_controller MAX_STEER_DEG); the Tesla PROTO
 # itself allows ~28.6 deg, which the cart can't do.
 DEFAULT_MAX_STEERING_DEG = 15.0
+RAW_TIMEOUT_S = 0.5   # raw relay commands older than this are treated as lost
 
 
 class TeslaDriver:
@@ -150,6 +167,21 @@ class TeslaDriver:
         # Emergency brake: True stops the car instantly and holds it, False
         # releases. The only way to brake -- speed 0 on cmd_* means coast.
         self.__node.create_subscription(Bool, 'vehicle/emergency_brake', self.__on_emergency_brake, 1)
+        # Raw relay input (see module docstring). Absolute name, like the
+        # other topics that mirror the real vehicle.
+        self.__node.create_subscription(UInt8, '/steering/command', self.__on_raw_command, 10)
+        self.__node.declare_parameter('steer_delay_s', 0.0)
+        # Asymmetric actuator (-1 = use steer_delay_s): a move command acts after
+        # steer_start_delay_s, a stop after steer_stop_delay_s (a larger value is
+        # run-on). A move whose stop acts before it does moves nothing at all.
+        self.__node.declare_parameter('steer_start_delay_s', -1.0)
+        self.__node.declare_parameter('steer_stop_delay_s', -1.0)
+        self.__node.declare_parameter('steer_rate_scale', 1.0)
+        # End stop for raw relay commands; defaults to the plugin's maxSteeringDeg.
+        self.__node.declare_parameter('max_steer_deg', float(self.__max_steer_deg))
+        self.__raw_queue = collections.deque()   # (sim time it takes effect, relay)
+        self.__raw_relay = RELAY_STOP
+        self.__raw_last_rx = None                # sim time of last raw command
         self.__speed_publisher = self.__node.create_publisher(Float32, 'vehicle/speed', 1)
         # Absolute (leading-slash) topic names: these two intentionally match
         # the real vehicle's global topic names exactly (road_segmentation's
@@ -186,6 +218,33 @@ class TeslaDriver:
     def __on_cmd_ackermann(self, message):
         self.__apply(message.speed * KMH_TO_MS, message.steering_angle)
 
+    def __on_raw_command(self, message):
+        value = int(message.data)
+        relay = RELAY_RIGHT if value > 50 else RELAY_LEFT if value < 50 else RELAY_STOP
+        now = self.__robot.getTime()
+        base = max(0.0, float(self.__node.get_parameter('steer_delay_s').value))
+        start = float(self.__node.get_parameter('steer_start_delay_s').value)
+        stop = float(self.__node.get_parameter('steer_stop_delay_s').value)
+        delay = (base if start < 0 else start) if relay != RELAY_STOP else (base if stop < 0 else stop)
+        apply_at = now + delay
+        if relay == RELAY_STOP:
+            # a stop that acts before an earlier move has started cancels it
+            self.__raw_queue = collections.deque(
+                q for q in self.__raw_queue if not (q[1] != RELAY_STOP and q[0] >= apply_at))
+        self.__raw_queue.append((apply_at, relay))
+        self.__raw_last_rx = now
+
+    def __raw_relay_now(self):
+        """The raw relay state in effect now, or None if raw mode is inactive."""
+        now = self.__robot.getTime()
+        while self.__raw_queue and self.__raw_queue[0][0] <= now:
+            self.__raw_relay = self.__raw_queue.popleft()[1]
+        if self.__raw_last_rx is None or now - self.__raw_last_rx > RAW_TIMEOUT_S:
+            self.__raw_relay = RELAY_STOP
+            self.__raw_queue.clear()
+            return None
+        return self.__raw_relay
+
     def __update_steering(self, dt):
         """Advance the relay-steering state by one step and actuate it.
 
@@ -193,12 +252,18 @@ class TeslaDriver:
         matching the real controller, which re-evaluates its hysteresis
         decision on a fixed tick, not only on new setpoints.
         """
-        relay = self.__steering_relay.update(
-            self.__target_steer_deg, self.__rack_angle_deg, time.monotonic())
+        limit = float(self.__node.get_parameter('max_steer_deg').value)
+        relay = self.__raw_relay_now()
+        if relay is None:
+            relay = self.__steering_relay.update(
+                self.__target_steer_deg, self.__rack_angle_deg, time.monotonic())
+        else:
+            self.__steering_relay.reset()   # no stale hysteresis state when raw mode ends
+        scale = float(self.__node.get_parameter('steer_rate_scale').value)
         if relay == RELAY_RIGHT:
-            self.__rack_angle_deg = min(self.__max_steer_deg, self.__rack_angle_deg + RATE_DEG_S * dt)
+            self.__rack_angle_deg = min(limit, self.__rack_angle_deg + RATE_DEG_S * scale * dt)
         elif relay == RELAY_LEFT:
-            self.__rack_angle_deg = max(-self.__max_steer_deg, self.__rack_angle_deg - RATE_DEG_S * dt)
+            self.__rack_angle_deg = max(-limit, self.__rack_angle_deg - RATE_DEG_S * scale * dt)
         # else RELAY_STOP: __rack_angle_deg unchanged.
 
         rack_rad = math.radians(self.__rack_angle_deg)

@@ -10,7 +10,7 @@ correspondence and silently produced a wrong coloured cloud.
 
 ## Decision
 Insert `register_node` before `point_cloud_xyzrgb_node`. It reprojects depth
-into the colour camera's framing (`/vehicle/range_finder/image_registered`).
+into the colour camera's framing (`/vehicle/range_finder_registered/image`).
 
 ## Consequences
 - Same architecture as the real RealSense SDK's `align_depth`.

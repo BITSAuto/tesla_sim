@@ -3,9 +3,14 @@
     <webots>
         <!-- alwaysOn keeps both sensors streaming even with no subscriber, so
              the depth and colour images stay time-aligned for the point cloud. -->
+        <!-- updateRate 30 Hz is the D435's frame rate. Without it Webots renders
+             both sensors every 10 ms basic step (100 Hz), which is 3x more than
+             the real camera produces and, on a software-rendered or remote
+             display, slows the simulation to a few percent of real time. -->
         <device reference="camera" type="Camera">
             <ros>
                 <alwaysOn>true</alwaysOn>
+                <updateRate>30</updateRate>
                 <!-- Same optical-frame split as range_finder below, needed now
                      that the camera and depth sensor have different FOVs (69
                      vs 87 deg, matching real D435 specs) -- depth_image_proc
@@ -17,6 +22,7 @@
         <device reference="range_finder" type="RangeFinder">
             <ros>
                 <alwaysOn>true</alwaysOn>
+                <updateRate>30</updateRate>
                 <!-- Depth data comes out in standard camera-optical convention
                      (X right, Y down, Z forward/depth), not the body-frame
                      convention (X forward, Y left, Z up) RViz's grid assumes

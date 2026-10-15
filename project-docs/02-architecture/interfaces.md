@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | `/cmd_ackermann` | `ackermann_msgs/AckermannDrive` | `speed` in **km/h** (kept for the upstream lane follower and the Jetson stack), `steering_angle` in rad, **+ = right**. 0 speed = release throttle and coast |
 | `/cmd_vel` | `geometry_msgs/Twist` | `linear.x` m/s, `angular.z` = steering angle in rad (not a yaw rate) |
+| `/steering/command` | `std_msgs/UInt8` | raw relay: > 50 right, < 50 left, 50 stop; overrides the `/cmd_ackermann` angle while commands keep arriving ([D-021](../03-decisions/D-021-raw-relay-steering-input.md)) |
 | `/vehicle/emergency_brake` | `std_msgs/Bool` | `true` stops the car instantly and holds it; `false` releases. The only way to brake |
 
 Steering commands are clamped to ±`maxSteeringDeg` (15°). Negative speeds
@@ -22,7 +23,7 @@ reverse; a change of direction coasts through zero first.
 | `/vehicle/camera/camera_info` | `sensor_msgs/CameraInfo` | |
 | `/vehicle/camera/recognitions` | `vision_msgs/Detection2DArray` | ground-truth object recognition |
 | `/vehicle/range_finder/image` | `sensor_msgs/Image` | 32FC1 depth in metres, 848×480; `inf` beyond max range |
-| `/vehicle/range_finder/image_registered` | `sensor_msgs/Image` | depth reprojected into the colour camera's framing |
+| `/vehicle/range_finder_registered/image` (+ `camera_info`) | `sensor_msgs/Image` | depth reprojected into the colour camera's framing |
 | `/vehicle/range_finder/point_cloud` | `sensor_msgs/PointCloud2` | XYZ cloud from the driver, depth framing |
 | `/vehicle/points` | `sensor_msgs/PointCloud2` | XYZRGB cloud in the colour camera's framing (best-effort QoS) |
 | `/vehicle/gps` | `geometry_msgs/PointStamped` | ground-truth world position of the GPS, which sits at the front bumper; `frame_id: gps` has no TF ([Q-002](../06-open-questions/Q-002-gps-has-no-tf-frame.md)) |
@@ -51,3 +52,14 @@ All sensor message header stamps are **wall-clock**, not sim time; see
 | `autonomous` | `false` | also run the upstream lane follower (publishes `/cmd_ackermann`) |
 | `rviz` | `false` | open RViz with `config/tesla_sim.rviz` |
 | `port` | `1234` | **uncommitted work in progress**, see [05-status/in-progress.md](../05-status/in-progress.md) |
+
+Environment: `TESLA_SIM_STREAM=1` serves the 3D view to a browser (port 1234).
+
+## Node parameters (`/tesla_driver`, settable at runtime)
+
+| Parameter | Default | Meaning |
+| --- | --- | --- |
+| `steer_delay_s` | 0.0 | delay applied to raw relay commands |
+| `steer_start_delay_s`, `steer_stop_delay_s` | −1 (use `steer_delay_s`) | separate delays for move / stop (run-on if stop > start) |
+| `steer_rate_scale` | 1.0 | wheel speed relative to 12.86 °/s |
+| `max_steer_deg` | `maxSteeringDeg` | end stop for raw relay commands |

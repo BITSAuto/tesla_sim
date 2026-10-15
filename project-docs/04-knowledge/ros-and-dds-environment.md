@@ -36,3 +36,10 @@ first (e.g. a small `exec` wrapper that sets `signal.SIGINT` to `SIG_DFL`).
 ### `pkill -f` / `pgrep -f` can match the calling shell
 **Verified** (2026-10-08): a stop command whose own text contains the pattern
 kills the shell running it. Run the stop script as its own command.
+
+### On Jazzy, a camera publisher's camera_info follows the image topic
+**Verified** 2026-10-15 on the Orin: `depth_image_proc` `register_node`
+published the registered image's camera info at
+`<image topic's namespace>/camera_info` despite an explicit
+`depth_registered/camera_info` remap; Humble on the laptop honoured the remap.
+Give every remapped image topic its own namespace (M-17).

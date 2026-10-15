@@ -2,6 +2,15 @@
 
 Newest first.
 
+
+## 2026-10-15 · Orin and Jazzy support — branch `feat/orin-jazzy-support`
+- The Orin session's raw relay input (`/steering/command`), 30 Hz sensors,
+  streaming and `BITSAuto_All_repo` paths, merged with main
+  ([D-021](../03-decisions/D-021-raw-relay-steering-input.md), [D-023](../03-decisions/D-023-sensors-at-30-hz-and-streaming.md)).
+- Registered depth in its own namespace: fixes the Jazzy camera_info clash
+  ([D-022](../03-decisions/D-022-registered-depth-own-namespace.md), M-17).
+- `worlds/road_loop.wbt` with the real camera mount ([D-024](../03-decisions/D-024-road-loop-world.md)).
+
 ## 2026-10-09 · Project docs
 - This `project-docs/` book replaces the private notes
   ([D-020](../03-decisions/D-020-project-docs-replace-private-notes.md)).

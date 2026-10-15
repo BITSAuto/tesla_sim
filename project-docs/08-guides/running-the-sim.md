@@ -21,6 +21,8 @@ On a native setup use `~/ros2_ws/src/tesla_sim/scripts/run_tesla_sim.sh`.
   non-interactive shell ignores SIGINT; wrap it so SIGINT is restored, or
   the launch can't be stopped cleanly.
 
+Worlds: `tesla_city.wbt` (default; 21.5 m roads) and `road_loop.wbt` (7 m road with curbs; `world:=road_loop.wbt`).
+
 Launch arguments: `world`, `pointcloud`, `colored`, `autonomous`, `rviz`
 ([interfaces.md](../02-architecture/interfaces.md#launch-arguments-tesla_simlaunchpy)).
 
