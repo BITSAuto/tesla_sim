@@ -22,7 +22,7 @@ reverse; a change of direction coasts through zero first.
 | `/vehicle/camera/camera_info` | `sensor_msgs/CameraInfo` | |
 | `/vehicle/camera/recognitions` | `vision_msgs/Detection2DArray` | ground-truth object recognition |
 | `/vehicle/range_finder/image` | `sensor_msgs/Image` | 32FC1 depth in metres, 848×480; `inf` beyond max range |
-| `/vehicle/range_finder/image_registered` | `sensor_msgs/Image` | depth reprojected into the colour camera's framing |
+| `/vehicle/range_finder_registered/image` (+ `camera_info`) | `sensor_msgs/Image` | depth reprojected into the colour camera's framing |
 | `/vehicle/range_finder/point_cloud` | `sensor_msgs/PointCloud2` | XYZ cloud from the driver, depth framing |
 | `/vehicle/points` | `sensor_msgs/PointCloud2` | XYZRGB cloud in the colour camera's framing (best-effort QoS) |
 | `/vehicle/gps` | `geometry_msgs/PointStamped` | ground-truth world position of the GPS, which sits at the front bumper; `frame_id: gps` has no TF ([Q-002](../06-open-questions/Q-002-gps-has-no-tf-frame.md)) |

@@ -226,8 +226,8 @@ point, not a confirmed spec.
 Since the camera and depth sensor now have different FOVs/resolutions, the
 depth image is not already registered to the colour image the way it would be
 for two identical co-located sensors -- `depth_image_proc`'s `register_node`
-reprojects depth into the camera's framing first (`/vehicle/range_finder/
-image_registered`), the same thing the real RealSense SDK's `align_depth`
+reprojects depth into the camera's framing first (`/vehicle/range_finder_registered/
+image`), the same thing the real RealSense SDK's `align_depth`
 does, before `point_cloud_xyzrgb_node` builds the coloured cloud from that.
 `/vehicle/range_finder/point_cloud` (the driver's own native cloud, no
 `depth_image_proc` involved) is unaffected and stays in the depth sensor's own

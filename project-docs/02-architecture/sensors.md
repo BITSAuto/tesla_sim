@@ -19,7 +19,7 @@ tilt the bonnet hides the road out to about 2.7 m; perception sees roughly
 
 Camera and depth have different FOVs and resolutions, so depth is not
 pixel-aligned with colour. `depth_image_proc register_node` reprojects depth
-into the colour camera's framing (`/vehicle/range_finder/image_registered`),
+into the colour camera's framing (`/vehicle/range_finder_registered/image`),
 like the RealSense SDK's `align_depth`, and `point_cloud_xyzrgb_node` builds
 `/vehicle/points` from that. Only the central 69° has colour; the outer
 depth wedges come through uncoloured, as on a real D435.

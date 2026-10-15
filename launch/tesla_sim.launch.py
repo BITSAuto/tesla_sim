@@ -73,14 +73,18 @@ def generate_launch_description():
             ('rgb/camera_info', '/vehicle/camera/camera_info'),
             ('depth/camera_info', '/vehicle/range_finder/camera_info'),
             ('depth/image_rect', '/vehicle/range_finder/image'),
-            ('depth_registered/image_rect', '/vehicle/range_finder/image_registered'),
-            ('depth_registered/camera_info', '/vehicle/range_finder/camera_info_registered'),
+            # Its own namespace, not /vehicle/range_finder/...: on Jazzy the
+            # image publisher puts camera_info next to the image topic whatever
+            # the remap says, which put the colour camera's intrinsics on
+            # /vehicle/range_finder/camera_info and broke depth back-projection.
+            ('depth_registered/image_rect', '/vehicle/range_finder_registered/image'),
+            ('depth_registered/camera_info', '/vehicle/range_finder_registered/camera_info'),
         ],
         condition=IfCondition(
             launch.substitutions.PythonExpression(["'", pointcloud, "' == 'true' and '", colored, "' == 'true'"])),
     )
     cloud_remappings = [
-        ('depth_registered/image_rect', '/vehicle/range_finder/image_registered'),
+        ('depth_registered/image_rect', '/vehicle/range_finder_registered/image'),
         ('rgb/image_rect_color', '/vehicle/camera/image_color'),
         ('rgb/camera_info', '/vehicle/camera/camera_info'),
         ('points', '/vehicle/points'),
